@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Join Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Enter Team Code</h2>
+    <input type="text" id="room" placeholder="Enter Code">
+    <button onclick="joinRoom()">Join</button>
+  </div>
+  <script>
+    function joinRoom() {
+      const room = document.getElementById('room').value.trim();
+      if (room.length >= 4) {
+        window.location.href = `/chat.html?room=${room}`;
+      } else {
+        alert("Enter a valid code (min 4 chars)");
+      }
+    }
+  </script>
+</body>
+</html>

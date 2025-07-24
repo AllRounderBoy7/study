@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Make Code</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Create Your Team Code</h2>
+    <input type="text" id="room" placeholder="Your Code (4-10 letters)">
+    <button onclick="makeRoom()">Create & Join</button>
+  </div>
+  <script>
+    function makeRoom() {
+      const room = document.getElementById('room').value.trim();
+      if (room.length >= 4 && room.length <= 10) {
+        window.location.href = `/chat.html?room=${room}`;
+      } else {
+        alert("Code must be 4–10 characters");
+      }
+    }
+  </script>
+</body>
+</html>
