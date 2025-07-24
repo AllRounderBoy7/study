@@ -1,53 +1,51 @@
-
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
-
+const express = require("express");
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
+const PORT = process.env.PORT || 3000;
 
-const activeRooms = {}; // To track connected clients per room
+// ⚠️ Serve public folder
+app.use(express.static("public"));
 
-// Serve static files from public/
-app.use(express.static(path.join(__dirname, 'public')));
+// 🔐 Store team codes and users
+const teams = {};
 
-// Socket.IO logic
-io.on('connection', (socket) => {
-  console.log('User connected');
+// 🟢 Socket connection logic
+io.on("connection", (socket) => {
+  console.log("🧠 New client connected:", socket.id);
 
-  socket.on('join', (room) => {
-    socket.join(room);
-    if (!activeRooms[room]) activeRooms[room] = new Set();
-    activeRooms[room].add(socket.id);
+  socket.on("join", (code) => {
+    socket.join(code);
 
-    io.to(room).emit('message', `🔵 A new user joined the room: ${room}`);
+    if (!teams[code]) teams[code] = [];
+    if (!teams[code].includes(socket.id)) {
+      teams[code].push(socket.id);
+    }
+
+    // Notify room how many are online
+    io.to(code).emit("online", teams[code].length);
   });
 
-  socket.on('message', ({ room, message }) => {
-    io.to(room).emit('message', message);
+  socket.on("send", ({ code, msg }) => {
+    io.to(code).emit("receive", msg);
   });
 
-  socket.on('disconnecting', () => {
+  socket.on("disconnecting", () => {
     for (const room of socket.rooms) {
-      if (room !== socket.id) {
-        activeRooms[room]?.delete(socket.id);
-        io.to(room).emit('message', '🔴 A user left the room.');
-        if (activeRooms[room]?.size === 0) {
-          delete activeRooms[room]; // Room stays permanent logically, but cleared from memory
-        }
+      if (teams[room]) {
+        teams[room] = teams[room].filter((id) => id !== socket.id);
+        io.to(room).emit("online", teams[room].length);
       }
     }
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
+  socket.on("disconnect", () => {
+    console.log("❌ Client disconnected:", socket.id);
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log('Server running on port', PORT);
+// 🚀 Start server
+http.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+
